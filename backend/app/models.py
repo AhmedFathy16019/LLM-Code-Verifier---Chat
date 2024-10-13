@@ -1,5 +1,5 @@
 from odmantic import Model, Field
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr, field_validator, BaseModel
 from typing import List
 from datetime import datetime
 
@@ -12,6 +12,7 @@ class Message(Model):
     base_output: str
     sampled_outputs: List[str]
     score: float
+    is_deleted: bool
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     model_config = {
@@ -27,6 +28,7 @@ class Chat(Model):
     messages: List[Message]
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    is_deleted: bool
     model_config = {
         'collection': 'chats',
     }
@@ -41,6 +43,7 @@ class User(Model):
     password: str
     api_key: str
     chats: List[Chat]
+    is_deactivated: bool
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     model_config = {
@@ -50,3 +53,8 @@ class User(Model):
     @field_validator('updated_at')
     def set_updated_at(cls, v):
         return datetime.utcnow()
+
+class TokenData(BaseModel):
+    user_id: str = None
+    username: str = None
+    api_key: str = None

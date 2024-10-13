@@ -1,19 +1,17 @@
-import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from ..models import User
 from ..schemas.user import (
     CreateUserRequest, CreateUserResponse,
     UpdateUserRequest, UpdateUserResponse,
-    GetUserResponse, DeleteUserResponse
+    GetUserResponse, DeleteUserResponse,
+    LoginUserRequest, LoginUserResponse,
 )
 
 from ..database import engine
+from ..utils.authorization import get_password_hash, encrypt_api_key, verify_password, create_access_token
 
 router = APIRouter()
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # User CRUD operations
 @router.post("/users", response_model=CreateUserResponse)
@@ -25,9 +23,7 @@ async def create_user(user: CreateUserRequest):
         api_key=user.api_key,  # Ensure this is hashed
         chats=[]
     )
-    logger.info(f"Creating user: {new_user}")
     await engine.save(new_user)
-    logger.info(f"User created with ID: {new_user.id}")
     return CreateUserResponse(
         user_id=str(new_user.id),
         username=new_user.username,
@@ -73,7 +69,10 @@ async def update_user(user_id: str, user_update: UpdateUserRequest):
 async def delete_user(user_id: str):
     user = await engine.find_one(User, User.id == user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
     await engine.delete(user)
     return DeleteUserResponse(
         user_id=str(user.id),
@@ -81,4 +80,62 @@ async def delete_user(user_id: str):
         email=user.email,
         created_at=user.created_at,
         updated_at=user.updated_at
+    )
+
+# User Signup
+@router.post("/users/signup", response_model=CreateUserResponse)
+async def signup_user(user: CreateUserRequest):
+    existing_user = await engine.find_one(User, User.email == user.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User already exists"
+        )
+    
+    hashed_password = get_password_hash(user.password)
+    encrypted_api_key = encrypt_api_key(user.api_key)
+    new_user = User(
+        username=user.username,
+        email=user.email,
+        password=hashed_password,
+        api_key=encrypted_api_key,
+        chats=[],
+        is_deactivated=False
+    )
+    await engine.save(new_user)
+
+    return CreateUserResponse(
+        user_id=str(new_user.id),
+        username=new_user.username,
+        email=new_user.email
+    )
+
+# User Login
+@router.post("/users/login", response_model=LoginUserResponse)
+async def login_user(user: LoginUserRequest):
+    db_user = await engine.find_one(User, User.email == user.email)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    pwd_correct = verify_password(user.password, db_user.password)
+    if not pwd_correct:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid password"
+        )
+    
+    token = create_access_token(data={
+        "user_id": str(db_user.id),
+        "username": db_user.username,
+        "api_key": db_user.api_key
+    })
+
+    return LoginUserResponse(
+        user_id=str(db_user.id),
+        username=db_user.username,
+        email=db_user.email,
+        token=token
     )

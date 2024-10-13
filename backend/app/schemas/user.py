@@ -45,3 +45,13 @@ class DeleteUserResponse(BaseModel):
     email: EmailStr
     created_at: datetime
     updated_at: datetime
+
+class LoginUserRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class LoginUserResponse(BaseModel):
+    user_id: str
+    username: str
+    email: EmailStr
+    token: str
