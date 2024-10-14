@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 
-from ..schemas.message import (
+from ..schemas.message_schema import (
     CreateMessageRequest, CreateMessageResponse,
     UpdateMessageRequest, UpdateMessageResponse,
     GetMessageResponse, DeleteMessageResponse,
@@ -10,7 +10,7 @@ from ..schemas.message import (
 from ..models import Message
 from ..database import engine
 from ..services.generation_service import generate_message_data
-from ..services.authorization import authorize_token
+from ..services.authorization_service import authorize_token
 
 router = APIRouter()
 

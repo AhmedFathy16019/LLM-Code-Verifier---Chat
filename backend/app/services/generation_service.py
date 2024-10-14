@@ -109,7 +109,6 @@ async def generate_message_data(prompt: str, entry_point: Optional[str], api_key
         raise Exception("Failed to generate base response")
     base_code = parse_code(base_response["choices"][0]["message"]["content"])
     yield f"Base code: {base_code}\n\n"
-    print("Base code generated", base_code)
 
     sample_responses = await generate_code_api(prompt=prompt, api_key=api_key, n=n_samples, client=client)
     if not sample_responses:

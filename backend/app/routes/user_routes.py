@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from ..models import User
-from ..schemas.user import (
+from ..schemas.user_schema import (
     CreateUserRequest, CreateUserResponse,
     UpdateUserRequest, UpdateUserResponse,
     GetUserResponse, DeleteUserResponse,
@@ -8,7 +8,7 @@ from ..schemas.user import (
 )
 
 from ..database import engine
-from ..services.authorization import get_password_hash, encrypt_api_key, verify_password, create_access_token
+from ..services.authorization_service import get_password_hash, encrypt_api_key, verify_password, create_access_token
 
 router = APIRouter()
 

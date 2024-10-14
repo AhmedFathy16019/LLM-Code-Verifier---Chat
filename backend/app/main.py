@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from .routes.user import router as user_router
-from .routes.chat import router as chat_router
-from .routes.message import router as message_router
+from .routes.user_routes import router as user_router
+from .routes.chat_routes import router as chat_router
+from .routes.message_routes import router as message_router
 
 app = FastAPI()
 

@@ -1,5 +1,5 @@
 from fastapi import Request, status, HTTPException
-from ..services.authorization import authorize_token
+from ..services.authorization_service import authorize_token
 
 async def handle_token(request: Request):
     token = request.headers.get("Authorization")

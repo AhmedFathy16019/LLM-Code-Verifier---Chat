@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from ..models import Chat, Message
 
-from ..schemas.chat import (
+from ..schemas.chat_schema import (
     CreateChatRequest, CreateChatResponse,
     UpdateChatRequest, UpdateChatResponse,
     GetChatResponse, DeleteChatResponse
