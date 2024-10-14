@@ -8,7 +8,7 @@ from ..schemas.user import (
 )
 
 from ..database import engine
-from ..utils.authorization import get_password_hash, encrypt_api_key, verify_password, create_access_token
+from ..services.authorization import get_password_hash, encrypt_api_key, verify_password, create_access_token
 
 router = APIRouter()
 

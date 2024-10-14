@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from ..models import TokenData, User
 from ..database import engine
+from odmantic import ObjectId
 
 import jwt
 from fastapi import Depends, status, HTTPException
@@ -60,7 +61,7 @@ def create_access_token(data: TokenData, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def decode_token(token: str):    
+def decode_token(token: str):  
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         token_data = TokenData(**payload)
@@ -75,8 +76,7 @@ def decode_token(token: str):
 async def authorize_token(token: str):
     token_data = decode_token(token)
     user_id = token_data.user_id
-
-    user = await engine.find_one(User, User.id == user_id)
+    user = await engine.find_one(User, User.id == ObjectId(user_id))
     
     if user is None:
         raise HTTPException(

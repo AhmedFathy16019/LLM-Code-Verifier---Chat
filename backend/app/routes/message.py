@@ -1,12 +1,16 @@
-from fastapi import APIRouter, HTTPException
-from ..models import Message
+from fastapi import APIRouter, HTTPException, Request
+from sse_starlette.sse import EventSourceResponse
 
 from ..schemas.message import (
     CreateMessageRequest, CreateMessageResponse,
     UpdateMessageRequest, UpdateMessageResponse,
-    GetMessageResponse, DeleteMessageResponse
+    GetMessageResponse, DeleteMessageResponse,
+    GenerateMessageRequest
 )
+from ..models import Message
 from ..database import engine
+from ..services.generation_service import generate_message_data
+from ..services.authorization import authorize_token
 
 router = APIRouter()
 
@@ -105,3 +109,22 @@ async def delete_message(message_id: str):
         created_at=message.created_at,
         updated_at=message.updated_at
     )
+
+@router.post("/messages/generate-message")
+async def generate_message(request: Request, message_request: GenerateMessageRequest):
+    token = request.headers.get("Authorization")[7:]
+    token = await authorize_token(token)
+    
+    async def event_generator():
+        try:
+            async for message in generate_message_data(
+                prompt=message_request.prompt,
+                entry_point=message_request.entry_point,
+                api_key=token.api_key,
+                n_samples=message_request.n_samples
+            ):
+                yield {"event": "message", "data": message}
+        except Exception as e:
+            yield {"event": "error", "data": str(e)}
+
+    return EventSourceResponse(event_generator())
