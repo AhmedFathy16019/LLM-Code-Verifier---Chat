@@ -1,0 +1,69 @@
+import ast, astor
+import asyncio
+import logging
+from concurrent.futures import ThreadPoolExecutor
+from typing import List, Dict
+
+# Configure logging
+logging.basicConfig(filename='execution_errors.log', level=logging.ERROR)
+
+def extract_entry_point(code: str):
+    tree = ast.parse(code)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            return node.name
+    return None
+
+def replace_entry_point(test_case: str, entry_point: str) -> str:
+    tree = ast.parse(test_case)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            node.func.id = entry_point
+    return astor.to_source(tree)
+
+def execute_code(code: str, test_case: str) -> str:
+    try:
+        exec_globals = {}
+        exec(code, exec_globals)
+        exec(test_case, exec_globals)
+        return exec_globals.get('result', 'No result')
+    except Exception as e:
+        logging.error(f"Error executing code: {e}")
+        return str(e)
+
+async def execute_codes(
+    base_code: str,
+    base_entry_point: str,
+    sample_code: List[str],
+    sample_entry_points: List[str],
+    test_cases: List[str]
+) -> Dict[str, List[str]]:
+    results = {
+        "base_code_results": [],
+        "sample_code_results": {}
+    }
+
+    def run_test(code: str, entry_point: str, test_case: str) -> str:
+        modified_test = replace_entry_point(test_case, entry_point)
+        modified_test = f"result = {modified_test}"
+        return execute_code(code, modified_test)
+
+    with ThreadPoolExecutor() as executor:
+        loop = asyncio.get_event_loop()
+
+        # Execute base code tests
+        base_futures = [
+            loop.run_in_executor(executor, run_test, base_code, base_entry_point, test_case)
+            for test_case in test_cases
+        ]
+        results["base_code_results"] = await asyncio.gather(*base_futures)
+
+        # Execute sample code tests
+        for i, (code, entry_point) in enumerate(zip(sample_code, sample_entry_points)):
+            sample_futures = [
+                loop.run_in_executor(executor, run_test, code, entry_point, test_case)
+                for test_case in test_cases
+            ]
+            results["sample_code_results"][i] = await asyncio.gather(*sample_futures)
+
+    return results

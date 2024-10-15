@@ -3,6 +3,8 @@ from typing import Dict, Optional
 from dotenv import load_dotenv
 import os, json, re
 
+from .execution_service import extract_entry_point, execute_codes
+
 load_dotenv()
 RETRIALS = int(os.getenv("RETRIALS") or '5')
 
@@ -89,6 +91,7 @@ async def generate_test_cases_api(
         response_dict = json.loads(response.to_json())
         response_content = response_dict["choices"][0]["message"]["content"]
         
+        test_cases = parse_code(response_content)
         test_cases = response_content.split("\n")
         test_cases = [process_test_case(test_case) for test_case in test_cases]
         return test_cases
@@ -108,7 +111,8 @@ async def generate_message_data(prompt: str, entry_point: Optional[str], api_key
     if not base_response:
         raise Exception("Failed to generate base response")
     base_code = parse_code(base_response["choices"][0]["message"]["content"])
-    yield f"Base code: {base_code}\n\n"
+    base_entry_point = extract_entry_point(base_code)
+    yield f"Base code: \n{base_code}\n\n"
 
     sample_responses = await generate_code_api(prompt=prompt, api_key=api_key, n=n_samples, client=client)
     if not sample_responses:
@@ -117,11 +121,16 @@ async def generate_message_data(prompt: str, entry_point: Optional[str], api_key
     for i, sample_response in enumerate(sample_responses["choices"]):
         sample_code = parse_code(sample_response["message"]["content"])
         sample_codes.append(sample_code)
-    sample_codes = "\n".join(sample_codes)
-    yield f"Sample codes: {sample_codes}\n\n"
+    sample_entry_points = [extract_entry_point(sample_code) for sample_code in sample_codes]
+    sample_codes_text = "\n".join(sample_codes)
+    yield f"Sample codes:\n{sample_codes_text}\n\n"
 
     test_cases = await generate_test_cases_api(prompt=prompt, entry_point=entry_point, api_key=api_key, client=client)
     if not test_cases:
         raise Exception("Failed to generate test cases")
-    test_cases = "\n".join(test_cases)
-    yield f"Test cases: {test_cases}\n\n"
+    test_cases_text = "\n".join(test_cases)
+    yield f"Test cases:\n{test_cases_text}\n\n"
+
+    results = await execute_codes(base_code, base_entry_point, sample_codes, sample_entry_points, test_cases)
+    results = json.dumps(results, indent=4)
+    yield f"Results:\n{results}\n\n"
