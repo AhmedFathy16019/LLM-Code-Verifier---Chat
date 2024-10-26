@@ -120,6 +120,7 @@ async def generate_message(request: Request, message_request: GenerateMessageReq
             async for message in generate_message_data(
                 prompt=message_request.prompt,
                 entry_point=message_request.entry_point,
+                sample_output=message_request.sample_output,
                 api_key=token.api_key,
                 n_samples=message_request.n_samples
             ):

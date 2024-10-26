@@ -3,9 +3,15 @@ import asyncio
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict
-
-# Configure logging
-logging.basicConfig(filename='execution_errors.log', level=logging.ERROR)
+ 
+# Configure logging for execution service
+execution_logger = logging.getLogger('execution_logger')
+execution_logger.setLevel(logging.ERROR)
+execution_handler = logging.FileHandler('execution_errors.log')
+execution_handler.setLevel(logging.ERROR)
+execution_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+execution_handler.setFormatter(execution_formatter)
+execution_logger.addHandler(execution_handler)
 
 def extract_entry_point(code: str):
     tree = ast.parse(code)
@@ -13,6 +19,18 @@ def extract_entry_point(code: str):
         if isinstance(node, ast.FunctionDef):
             return node.name
     return None
+
+def extract_entry_points(codes: List[str]) -> List[str]:
+    entry_points = []
+    for code in codes:
+        tree = ast.parse(code)
+        entry_point = None
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef):
+                entry_point = node.name
+                break
+        entry_points.append(entry_point)
+    return entry_points
 
 def replace_entry_point(test_case: str, entry_point: str) -> str:
     tree = ast.parse(test_case)
@@ -64,6 +82,6 @@ async def execute_codes(
                 loop.run_in_executor(executor, run_test, code, entry_point, test_case)
                 for test_case in test_cases
             ]
-            results["sample_code_results"][i] = await asyncio.gather(*sample_futures)
+            results["sample_code_results"][f"sample_{i}"] = await asyncio.gather(*sample_futures)
 
     return results
