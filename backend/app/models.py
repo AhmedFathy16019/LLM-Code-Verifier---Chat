@@ -6,13 +6,13 @@ from datetime import datetime
 # ODMantic MongoDB models
 class Message(Model):
     prompt: str
-    base_response: str
-    sampled_responses: List[str]
+    base_code: str
+    sample_codes: List[str]
     test_cases: List[str]
-    base_output: str
-    sampled_outputs: List[str]
+    base_output: List
+    sample_outputs: dict
     score: float
-    is_deleted: bool
+    is_deleted: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     model_config = {

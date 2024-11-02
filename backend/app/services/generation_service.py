@@ -136,11 +136,11 @@ async def generate_message_data(
             raise Exception("Failed to generate base response")
         base_code = parse_code(base_response["choices"][0]["message"]["content"])
         base_code_response = {
-            "message_type": "base_response",
+            "message_type": "base_code",
             "data": base_code
         }
         base_code_text = json.dumps(base_code_response, indent=4)
-        yield f"{base_code_text}\n\n"
+        yield f"{base_code_text}\n\n"        
     except Exception as e:
         logging.error(f"Error generating base response: {e}")
         raise
@@ -154,7 +154,7 @@ async def generate_message_data(
             sample_code = parse_code(sample_response["message"]["content"])
             sample_codes.append(sample_code)
         sample_codes_response = {
-            "message_type": "sample_responses",
+            "message_type": "sample_codes",
             "data": sample_codes
         }
         sample_codes_text = json.dumps(sample_codes_response, indent=4)
@@ -183,12 +183,22 @@ async def generate_message_data(
         base_entry_point = entry_points[0]
         sample_entry_points = entry_points[1:]
         execution_results = await execute_codes(base_code, base_entry_point, sample_codes, sample_entry_points, test_cases)
-        execution_results_response = {
-            "message_type": "execution_results",
-            "data": execution_results
+        
+        base_output = execution_results["base_code_results"]
+        base_output_response = {
+            "message_type": "base_output",
+            "data": base_output
         }
-        execution_results_text = json.dumps(execution_results_response, indent=4)
-        yield f"{execution_results_text}\n\n"
+        base_output_text = json.dumps(base_output_response, indent=4)
+        yield f"{base_output_text}\n\n"
+
+        sample_outputs = execution_results["sample_code_results"]
+        sample_outputs_response = {
+            "message_type": "sample_outputs",
+            "data": sample_outputs
+        }
+        sample_outputs_text = json.dumps(sample_outputs_response, indent=4)
+        yield f"{sample_outputs_text}\n\n"
     except Exception as e:
         logging.error(f"Error executing codes: {e}")
         raise
@@ -213,6 +223,7 @@ async def generate_message_data(
         }
         score_text = json.dumps(score_response, indent=4)
         yield f"{score_text}\n\n"
+
     except Exception as e:
         logging.error(f"Error computing similarity score: {e}")
         raise

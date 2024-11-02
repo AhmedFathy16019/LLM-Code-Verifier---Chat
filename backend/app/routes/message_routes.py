@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
+import json
 
 from ..schemas.message_schema import (
     CreateMessageRequest, CreateMessageResponse,
@@ -117,6 +118,7 @@ async def generate_message(request: Request, message_request: GenerateMessageReq
     
     async def event_generator():
         try:
+            message_data = {}
             async for message in generate_message_data(
                 prompt=message_request.prompt,
                 entry_point=message_request.entry_point,
@@ -125,6 +127,21 @@ async def generate_message(request: Request, message_request: GenerateMessageReq
                 n_samples=message_request.n_samples
             ):
                 yield {"event": "message", "data": message}
+                message_dict = json.loads(message)
+                message_type = message_dict["message_type"]
+                message_data[message_type] = message_dict["data"]
+
+            new_message = Message(
+                prompt=message_request.prompt,
+                base_code=message_data["base_code"],
+                sample_codes=message_data["sample_codes"],
+                test_cases=message_data["test_cases"],
+                base_output=message_data["base_output"],
+                sample_outputs=message_data["sample_outputs"],
+                score=message_data["score"]
+            )
+
+            await engine.save(new_message)
         except Exception as e:
             yield {"event": "error", "data": str(e)}
 

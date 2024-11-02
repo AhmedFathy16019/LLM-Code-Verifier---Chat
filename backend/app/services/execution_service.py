@@ -45,6 +45,9 @@ def execute_code(code: str, test_case: str) -> str:
         exec(code, exec_globals)
         exec(test_case, exec_globals)
         return exec_globals.get('result', 'No result')
+    except SyntaxError as e:
+        logging.error(f"Syntax error executing code: {e}")
+        return str(e)
     except Exception as e:
         logging.error(f"Error executing code: {e}")
         return str(e)
