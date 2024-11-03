@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from ..models import Chat, Message
+from fastapi import APIRouter, HTTPException, Request
+from odmantic import ObjectId
+from ..models import Chat, Message, User
 
 from ..schemas.chat_schema import (
     CreateChatRequest, CreateChatResponse,
@@ -9,17 +10,30 @@ from ..schemas.chat_schema import (
 
 from ..database import engine
 
+from ..services.authorization_service import authorize_token
+
 router = APIRouter()
 
 
 # Chat CRUD operations
 @router.post("/chats", response_model=CreateChatResponse)
-async def create_chat(chat: CreateChatRequest):
+async def create_chat(request: Request, chat: CreateChatRequest):
+    token = request.headers.get("Authorization")[7:]
+    token = await authorize_token(token)
+
+    user = await engine.find_one(User, User.id == ObjectId(token.user_id))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     new_chat = Chat(
         title=chat.title,
         messages=[]
     )
     await engine.save(new_chat)
+    
+    user.chats.append(new_chat.id)
+    await engine.save(user)
+    
     return CreateChatResponse(
         chat_id=str(new_chat.id),
         title=new_chat.title,

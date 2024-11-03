@@ -8,7 +8,7 @@ from ..schemas.message_schema import (
     GetMessageResponse, DeleteMessageResponse,
     GenerateMessageRequest
 )
-from ..models import Message
+from ..models import Message, Chat
 from ..database import engine
 from ..services.generation_service import generate_message_data
 from ..services.authorization_service import authorize_token
@@ -111,8 +111,8 @@ async def delete_message(message_id: str):
         updated_at=message.updated_at
     )
 
-@router.post("/messages/generate-message")
-async def generate_message(request: Request, message_request: GenerateMessageRequest):
+@router.post("/messages/generate-message/{chat_id}")
+async def generate_message(request: Request, chat_id: str,message_request: GenerateMessageRequest):
     token = request.headers.get("Authorization")[7:]
     token = await authorize_token(token)
     
@@ -142,6 +142,13 @@ async def generate_message(request: Request, message_request: GenerateMessageReq
             )
 
             await engine.save(new_message)
+
+            chat = await engine.find_one(Chat, Chat.id == chat_id)
+            if not chat:
+                raise HTTPException(status_code=404, detail="Chat not found")
+
+            chat.messages.append(new_message.id)
+            await engine.save(chat)
         except Exception as e:
             yield {"event": "error", "data": str(e)}
 
