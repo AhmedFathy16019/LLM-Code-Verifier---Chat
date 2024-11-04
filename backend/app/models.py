@@ -1,4 +1,4 @@
-from odmantic import Model, Field
+from odmantic import Model, Field, ObjectId
 from pydantic import EmailStr, field_validator, BaseModel
 from typing import List
 from datetime import datetime
@@ -25,10 +25,10 @@ class Message(Model):
 
 class Chat(Model):
     title: str
-    messages: List[Message]
+    messages: List[ObjectId]
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    is_deleted: bool
+    is_deleted: bool = False
     model_config = {
         'collection': 'chats',
     }
@@ -42,7 +42,7 @@ class User(Model):
     email: EmailStr
     password: str
     api_key: str
-    chats: List[Chat]
+    chats: List[ObjectId]
     is_deactivated: bool
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 import json
+from odmantic import ObjectId
 
 from ..schemas.message_schema import (
     CreateMessageRequest, CreateMessageResponse,
@@ -112,9 +113,11 @@ async def delete_message(message_id: str):
     )
 
 @router.post("/messages/generate-message/{chat_id}")
-async def generate_message(request: Request, chat_id: str,message_request: GenerateMessageRequest):
+async def generate_message(request: Request, chat_id: str, message_request: GenerateMessageRequest):
     token = request.headers.get("Authorization")[7:]
     token = await authorize_token(token)
+
+    print(chat_id)
     
     async def event_generator():
         try:
@@ -143,7 +146,7 @@ async def generate_message(request: Request, chat_id: str,message_request: Gener
 
             await engine.save(new_message)
 
-            chat = await engine.find_one(Chat, Chat.id == chat_id)
+            chat = await engine.find_one(Chat, Chat.id == ObjectId(chat_id))
             if not chat:
                 raise HTTPException(status_code=404, detail="Chat not found")
 

@@ -27,7 +27,7 @@ async def create_chat(request: Request, chat: CreateChatRequest):
     
     new_chat = Chat(
         title=chat.title,
-        messages=[]
+        messages=[],
     )
     await engine.save(new_chat)
     

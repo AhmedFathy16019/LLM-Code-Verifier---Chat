@@ -110,7 +110,7 @@ async def generate_test_cases_api(
         
         test_cases = parse_code(response_content)
         test_cases = response_content.split("\n")
-        test_cases = [process_test_case(test_case) for test_case in test_cases]
+        test_cases = [process_test_case(test_case) for test_case in test_cases if test_case not in ["[", "]"]]
         return test_cases
     
     return None
