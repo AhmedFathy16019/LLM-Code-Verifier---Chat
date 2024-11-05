@@ -41,7 +41,6 @@ def process_test_case(text):
 
 async def generate_code_api(
     prompt: str,
-    sample_output: Optional[str],
     api_key: str,
     client: AzureOpenAI,
     model: str="gpt4-api",
@@ -56,9 +55,6 @@ async def generate_code_api(
     prompt = "Write a Python function in markdown that does the following:\n" + prompt + \
         ". \nReturn the code of the function only without any other text." + \
         "\nAlso, include all the needed imports."
-
-    if sample_output:
-        prompt += f"\n\nSample output: {sample_output}"
 
     client.api_key = api_key
 
@@ -120,9 +116,7 @@ async def generate_test_cases_api(
 async def generate_message_data(
     prompt: str,
     entry_point: Optional[str],
-    sample_output: Optional[str],
     api_key: str,
-    n_samples: int=5
 ):
     client = AzureOpenAI(
         azure_endpoint=os.getenv("AZURE_ENDPOINT"),
@@ -131,7 +125,7 @@ async def generate_message_data(
     )
 
     try:
-        base_response = await generate_code_api(prompt=prompt, sample_output=sample_output, api_key=api_key, client=client)
+        base_response = await generate_code_api(prompt=prompt, api_key=api_key, client=client)
         if not base_response:
             raise Exception("Failed to generate base response")
         base_code = parse_code(base_response["choices"][0]["message"]["content"])
@@ -146,7 +140,7 @@ async def generate_message_data(
         raise
 
     try:
-        sample_responses = await generate_code_api(prompt=prompt, sample_output=sample_output, api_key=api_key, n=n_samples, client=client)
+        sample_responses = await generate_code_api(prompt=prompt, api_key=api_key, n=5,client=client)
         if not sample_responses:
             raise Exception("Failed to generate sample responses")
         sample_codes = []

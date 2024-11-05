@@ -65,8 +65,8 @@ class DeleteMessageResponse(BaseModel):
 class GenerateMessageRequest(BaseModel):
     prompt: str
     entry_point: Optional[str] = None
-    sample_output: Optional[str] = None
     temperature: Optional[float] = None
     timeout: Optional[int] = None
-    exact_matching: Optional[bool] = None
-    n_samples: Optional[int] = 5
+    float_threshold: Optional[float] = None
+    ignore_list_order: Optional[bool] = None
+    ignore_string_case: Optional[bool] = None
