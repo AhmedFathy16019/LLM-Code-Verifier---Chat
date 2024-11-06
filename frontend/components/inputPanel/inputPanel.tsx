@@ -1,7 +1,12 @@
 'use client'
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     Form,
     FormControl,
@@ -10,24 +15,23 @@ import {
     FormLabel,
 } from '@/components/ui/form'
 import {
-    Card,
-    CardContent
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
     Popover,
     PopoverTrigger,
     PopoverContent,
 } from '@/components/ui/popover'
+import {
+    Card,
+    CardContent
+} from '@/components/ui/card'
 import {
     PaperPlaneIcon,
     GearIcon,
 } from "@radix-ui/react-icons";
 
 import inputSchema, { InputSchema } from "../../lib/inputSchema";
-import { useEffect } from "react";
+import { useMessageContext } from "@/contexts/messageContext";
+import { generateMessage } from "@/lib/actions/messagesActions";
+import { MessageRequestData } from "@/lib/types";
 
 const formDefaultValues: InputSchema = {
     prompt: "",
@@ -44,7 +48,6 @@ export function InputPanel() {
         resolver: zodResolver(inputSchema),
         defaultValues: formDefaultValues
     });
-
     const { errors } = form.formState;
 
     useEffect(() => {
@@ -52,21 +55,48 @@ export function InputPanel() {
             console.log("Validation errors:", errors);
         }
     }, [errors]);
-    
+
+    const { setRequestData, setSseData } = useMessageContext();
+
     const submit = async (data: InputSchema) => {
-        const parsedData = {
-            ...data,
-            temperature: parseFloat(data.temperature as unknown as string),
-            timeout: parseFloat(data.timeout as unknown as string),
-            floatThreshold: parseFloat(data.floatThreshold as unknown as string),
+        const apiBaseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages`;
+        const chatId = '6728f0bbeffd785b366339d4';
+
+        const requestData: MessageRequestData = {
+            prompt: data.prompt,
+            entry_point: data.entryPoint!,
+            temperature: data.temperature!,
+            timeout: data.timeout!,
+            floatThreshold: data.floatThreshold!,
+            ignoreListOrder: data.ignoreListOrder!,
+            ignoreStringCase: data.ignoreStringCase!,
+        };
+        setRequestData(requestData);
+
+        const response = await generateMessage(requestData);
+
+        if (!response) {
+            return;
+        }
+
+        const eventSource = new EventSource(`${apiBaseUrl}/stream-message/${chatId}`);
+    
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            setSseData(data);
         };
 
-        console.log("Submitted data:");
-        console.log(parsedData);
+        eventSource.onerror = () => {
+            eventSource.close();
+        };
+
+        return () => {
+            eventSource.close();
+        }
     }
 
     return (
-        <Card className="w-11/12 m-auto">
+        <Card className="w-11/12">
             <CardContent className="flex items-center p-2">
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(submit)} className="flex flex-row space-x-2 w-full">
