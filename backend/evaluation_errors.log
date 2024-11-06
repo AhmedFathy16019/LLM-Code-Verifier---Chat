@@ -7,3 +7,39 @@ sample_output:0
 2024-11-02 23:52:37,687 - ERROR - Error comparing outputs: 'distance'
 base_output:mean requires at least one data point
 sample_output:0
+2024-11-05 04:33:08,760 - ERROR - Error comparing outputs: 'distance'
+base_output:mean requires at least one data point
+sample_output:0
+2024-11-05 04:33:08,764 - ERROR - Error comparing outputs: 'distance'
+base_output:mean requires at least one data point
+sample_output:0
+2024-11-05 04:33:55,035 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point
+2024-11-05 04:33:55,038 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:nan
+2024-11-05 04:33:55,040 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point
+2024-11-05 04:36:05,850 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point
+2024-11-05 04:36:05,852 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point
+2024-11-05 06:22:25,291 - ERROR - Error comparing outputs: 'distance'
+base_output:mean requires at least one data point
+sample_output:0.0
+2024-11-05 11:20:54,440 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:division by zero
+2024-11-05 11:20:54,444 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point
+2024-11-05 11:20:54,447 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point
+2024-11-05 11:20:54,450 - ERROR - Error comparing outputs: 'distance'
+base_output:0.0
+sample_output:mean requires at least one data point

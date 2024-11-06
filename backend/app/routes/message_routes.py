@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 import json
 from odmantic import ObjectId
+import redis
 
 from ..schemas.message_schema import (
     CreateMessageRequest, CreateMessageResponse,
@@ -15,6 +16,9 @@ from ..services.generation_service import generate_message_data
 from ..services.authorization_service import authorize_token
 
 router = APIRouter()
+
+# Configure Redis connection
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 # Message CRUD operations
 @router.post("/messages", response_model=CreateMessageResponse)
@@ -113,27 +117,46 @@ async def delete_message(message_id: str):
     )
 
 @router.post("/messages/generate-message/{chat_id}")
-async def generate_message(request: Request, chat_id: str, message_request: GenerateMessageRequest):
+async def initiate_generate_message(request: Request, chat_id: str, message_request: GenerateMessageRequest):
     token = request.headers.get("Authorization")[7:]
     token = await authorize_token(token)
+    print(message_request.prompt)
+    print(message_request.entry_point)
+    print(token.api_key)
+    # Store the necessary data in Redis
+    redis_client.hmset(chat_id, {
+        "prompt": message_request.prompt,
+        "entry_point": message_request.entry_point,
+        "api_key": token.api_key
+    })
 
-    print(chat_id)
-    
+    return {"status": "Process initiated"}
+
+
+@router.get("/messages/stream-message/{chat_id}")
+async def stream_generate_message(request: Request, chat_id: str):
+    event_data = redis_client.hgetall(chat_id)
+    if not event_data:
+        raise HTTPException(status_code=404, detail="Chat not found or process not initiated")
+
+    prompt = event_data[b'prompt'].decode('utf-8')
+    entry_point = event_data[b'entry_point'].decode('utf-8')
+    api_key = event_data[b'api_key'].decode('utf-8')
+
     async def event_generator():
         try:
             message_data = {}
             async for message in generate_message_data(
-                prompt=message_request.prompt,
-                entry_point=message_request.entry_point,
-                api_key=token.api_key,
+                prompt=prompt,
+                entry_point=entry_point,
+                api_key=api_key,
             ):
                 yield {"event": "message", "data": message}
                 message_dict = json.loads(message)
                 message_type = message_dict["message_type"]
                 message_data[message_type] = message_dict["data"]
-
             new_message = Message(
-                prompt=message_request.prompt,
+                prompt=prompt,
                 base_code=message_data["base_code"],
                 sample_codes=message_data["sample_codes"],
                 test_cases=message_data["test_cases"],
@@ -141,13 +164,10 @@ async def generate_message(request: Request, chat_id: str, message_request: Gene
                 sample_outputs=message_data["sample_outputs"],
                 score=message_data["score"]
             )
-
             await engine.save(new_message)
-
             chat = await engine.find_one(Chat, Chat.id == ObjectId(chat_id))
             if not chat:
                 raise HTTPException(status_code=404, detail="Chat not found")
-
             chat.messages.append(new_message.id)
             await engine.save(chat)
         except Exception as e:
