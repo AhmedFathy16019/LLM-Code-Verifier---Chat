@@ -19,32 +19,41 @@ def compare_outputs(
     def compare_output(base_code_output, sample_code_output):
         comparison_result = {}
 
-        base_code_dict = {
-            "type": "output",
-            "value": base_code_output
-        }
-        sample_code_dict = {
-            "type": "output",
-            "value": sample_code_output
-        }
-        # Use DeepDiff for comprehensive comparison
-        try:
-            diff = DeepDiff(base_code_dict, sample_code_dict, significant_digits=3, ignore_numeric_type_changes=True)
-            if diff:
+        base_exception = isinstance(base_code_output, dict) and base_code_output.get('exception')
+        sample_exception = isinstance(sample_code_output, dict) and sample_code_output.get('exception')
+
+        if base_exception or sample_exception:
+            comparison_result['state'] = "exception"
+            comparison_result['diff'] = "Exception occurred during execution."
+            comparison_result['score'] = -1
+        else:
+            base_code_dict = {
+                "type": "output",
+                "value": base_code_output
+            }
+            sample_code_dict = {
+                "type": "output",
+                "value": sample_code_output
+            }
+            
+            try:
+                diff = DeepDiff(base_code_dict, sample_code_dict, significant_digits=3, ignore_numeric_type_changes=True)
+                if diff:
+                    comparison_result['state'] = "different"
+                    comparison_result['diff'] = diff
+                    comparison_result['score'] = 1 - diff['distance']
+                else:
+                    comparison_result['state'] = "identical"
+                    comparison_result['diff'] = None
+                    comparison_result['score'] = 1
+                return comparison_result
+            except Exception as e:
+                logger.error(f"Error comparing outputs: {e}\nbase_output:{base_code_output}\nsample_output:{sample_code_output}")
                 comparison_result['state'] = "different"
-                comparison_result['diff'] = diff
-                comparison_result['score'] = 1 - diff['distance']
-            else:
-                comparison_result['state'] = "identical"
-                comparison_result['diff'] = None
-                comparison_result['score'] = 1
-            return comparison_result
-        except Exception as e:
-            logger.error(f"Error comparing outputs: {e}\nbase_output:{base_code_output}\nsample_output:{sample_code_output}")
-            comparison_result['state'] = "different"
-            comparison_result['diff'] = f"Error comparing outputs: {e}\nbase_output:{base_code_output}\nsample_output:{sample_code_output}"
-            comparison_result['score'] = -1 # Penalizing different types or errors
-            return comparison_result
+                comparison_result['diff'] = f"Error comparing outputs: {e}\nbase_output:{base_code_output}\nsample_output:{sample_code_output}"
+                comparison_result['score'] = -1
+    
+        return comparison_result
     
     # Comparing all execution results
     comparison_results = {}
