@@ -1,4 +1,4 @@
-from openai import AzureOpenAI
+from openai import AzureOpenAI, OpenAI
 from typing import Dict, Optional
 from dotenv import load_dotenv
 import os, json, re, logging
@@ -41,22 +41,17 @@ def process_test_case(text):
 
 async def generate_code_api(
     prompt: str,
-    api_key: str,
-    client: AzureOpenAI,
-    model: str="gpt4-api",
+    client: OpenAI,
+    model: str="gpt-4-turbo-2024-04-09",
     n: int=1,
     temperature: float=0.7,
 ) -> Optional[Dict]:
-    if not api_key:
-        raise Exception("API key not provided")
     if not prompt:
         raise Exception("Prompt not provided")
 
     prompt = "Write a Python function in markdown that does the following:\n" + prompt + \
         ". \nReturn the code of the function only without any other text." + \
         "\nAlso, include all the needed imports."
-
-    client.api_key = api_key
 
     for _ in range(RETRIALS):
         response = client.chat.completions.create(
@@ -78,12 +73,10 @@ async def generate_code_api(
 async def generate_test_cases_api(
     prompt: str,
     entry_point: Optional[str],
-    api_key: str,
-    client: AzureOpenAI,
-    model: str="gpt4-api",
+    client: OpenAI,
+    model: str="gpt-4-turbo-2024-04-09",
     n_tests: int=10,
 ) -> Optional[Dict]:
-    client.api_key = api_key
     if not entry_point:
         entry_point = "test_case_runner"
 
@@ -118,14 +111,12 @@ async def generate_message_data(
     entry_point: Optional[str],
     api_key: str,
 ):
-    client = AzureOpenAI(
-        azure_endpoint=os.getenv("AZURE_ENDPOINT"),
-        api_version = "2023-05-15",
-        api_key=api_key
-    )
+    if not api_key:
+        raise Exception("API key not provided")
+    client = OpenAI(api_key=api_key)
 
     try:
-        base_response = await generate_code_api(prompt=prompt, api_key=api_key, client=client)
+        base_response = await generate_code_api(prompt=prompt, client=client)
         if not base_response:
             raise Exception("Failed to generate base response")
         base_code = parse_code(base_response["choices"][0]["message"]["content"])
@@ -140,7 +131,7 @@ async def generate_message_data(
         raise
 
     try:
-        sample_responses = await generate_code_api(prompt=prompt, api_key=api_key, n=5,client=client)
+        sample_responses = await generate_code_api(prompt=prompt, n=5,client=client)
         if not sample_responses:
             raise Exception("Failed to generate sample responses")
         sample_codes = []
@@ -158,7 +149,7 @@ async def generate_message_data(
         raise
 
     try:
-        test_cases = await generate_test_cases_api(prompt=prompt, entry_point=entry_point, api_key=api_key, client=client)
+        test_cases = await generate_test_cases_api(prompt=prompt, entry_point=entry_point, client=client)
         if not test_cases:
             raise Exception("Failed to generate test cases")
         test_cases_response = {

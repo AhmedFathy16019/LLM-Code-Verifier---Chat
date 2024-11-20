@@ -120,9 +120,7 @@ async def delete_message(message_id: str):
 async def initiate_generate_message(request: Request, chat_id: str, message_request: GenerateMessageRequest):
     token = request.headers.get("Authorization")[7:]
     token = await authorize_token(token)
-    print(message_request.prompt)
-    print(message_request.entry_point)
-    print(token.api_key)
+    
     # Store the necessary data in Redis
     redis_client.hmset(chat_id, {
         "prompt": message_request.prompt,
