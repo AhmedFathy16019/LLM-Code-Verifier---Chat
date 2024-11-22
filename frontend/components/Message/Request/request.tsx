@@ -21,6 +21,10 @@ import { Button } from '@/components/ui/button';
 export function Request() {
   const { requestData } = useMessageContext();
 
+  if (!requestData.prompt) {
+    return null;
+  }
+  
   return (
     <Card className="w-1/2 ml-auto">
         <CardContent className="flex flex-col items-center justify-center">
@@ -40,7 +44,7 @@ export function Request() {
                         <TableBody>         
                             <TableRow>
                                 <TableCell>entry_point</TableCell>
-                                <TableCell>{requestData.entry_point}</TableCell>
+                                <TableCell>{requestData.entry_point || "Not Provided"}</TableCell>
                             </TableRow>
 
                             <TableRow>

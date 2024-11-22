@@ -69,22 +69,21 @@ async def execute_codes(
         modified_test = f"result = {modified_test}"
         return execute_code(code, modified_test)
 
-    with ThreadPoolExecutor() as executor:
-        loop = asyncio.get_event_loop()
+    loop = asyncio.get_event_loop()
 
-        # Execute base code tests
-        base_futures = [
-            loop.run_in_executor(executor, run_test, base_code, base_entry_point, test_case)
+    # Execute base code tests
+    base_futures = [
+        loop.run_in_executor(None, run_test, base_code, base_entry_point, test_case)
+        for test_case in test_cases
+    ]
+    results["base_code_results"] = await asyncio.gather(*base_futures)
+
+    # Execute sample code tests
+    for i, (code, entry_point) in enumerate(zip(sample_code, sample_entry_points)):
+        sample_futures = [
+            loop.run_in_executor(None, run_test, code, entry_point, test_case)
             for test_case in test_cases
         ]
-        results["base_code_results"] = await asyncio.gather(*base_futures)
-
-        # Execute sample code tests
-        for i, (code, entry_point) in enumerate(zip(sample_code, sample_entry_points)):
-            sample_futures = [
-                loop.run_in_executor(executor, run_test, code, entry_point, test_case)
-                for test_case in test_cases
-            ]
-            results["sample_code_results"][f"sample_{i}"] = await asyncio.gather(*sample_futures)
+        results["sample_code_results"][f"sample_{i}"] = await asyncio.gather(*sample_futures)
 
     return results

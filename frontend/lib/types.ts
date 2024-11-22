@@ -18,7 +18,27 @@ enum MessageType {
     SCORE = "score",
 }
 
+type BaseCodeData = string;
+type SampleCodesData = string[];
+type TestCasesData = string[];
+type BaseOutputData = unknown[];
+type SampleOutputsData = { [key: string]: unknown[] };
+type ComparisonResultsData = {
+    [key: string]: { 
+        state: string;
+        diff: string | null;
+        score: number; 
+    }[] 
+};
+type scoreData = number;
+
 export type MessageSseData = {
     message_type: MessageType;
-    data: unknown;
+    data: BaseCodeData | SampleCodesData | TestCasesData | BaseOutputData | SampleOutputsData | ComparisonResultsData | scoreData;
+}
+
+export type ExceptionMessage = {
+    exception: boolean;
+    exception_type: string;
+    exception_message: string;
 }

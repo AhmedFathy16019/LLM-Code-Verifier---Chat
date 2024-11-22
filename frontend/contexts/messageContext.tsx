@@ -8,6 +8,8 @@ interface MessageContextType {
     setRequestData: (data: MessageRequestData) => void;
     sseData: MessageSseData;
     setSseData: (data: MessageSseData) => void;
+    sseReady: boolean;
+    setSseReady: (ready: boolean) => void;
 }
 
 const MessageContext = createContext<MessageContextType | undefined>(undefined);
@@ -15,9 +17,10 @@ const MessageContext = createContext<MessageContextType | undefined>(undefined);
 export function MessageProvider ({ children }: { children: ReactNode }) {
     const [requestData, setRequestData] = useState<MessageRequestData>({} as MessageRequestData);
     const [sseData, setSseData] = useState<MessageSseData>({} as MessageSseData);
+    const [sseReady, setSseReady] = useState<boolean>(false);
 
     return (
-        <MessageContext.Provider value={{ requestData, setRequestData, sseData, setSseData }}>
+        <MessageContext.Provider value={{ requestData, setRequestData, sseData, setSseData, sseReady, setSseReady }}>
             {children}
         </MessageContext.Provider>
     );

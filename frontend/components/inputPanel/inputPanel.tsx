@@ -35,7 +35,7 @@ import { MessageRequestData } from "@/lib/types";
 
 const formDefaultValues: InputSchema = {
     prompt: "",
-    entryPoint: "",
+    entryPoint: "test_case_runner",
     temperature: 1,
     timeout: 10,
     floatThreshold: 1e-5,
@@ -56,12 +56,9 @@ export function InputPanel() {
         }
     }, [errors]);
 
-    const { setRequestData, setSseData } = useMessageContext();
+    const { setRequestData, setSseReady } = useMessageContext();
 
     const submit = async (data: InputSchema) => {
-        const apiBaseUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/messages`;
-        const chatId = '6728f0bbeffd785b366339d4';
-
         const requestData: MessageRequestData = {
             prompt: data.prompt,
             entry_point: data.entryPoint!,
@@ -77,22 +74,11 @@ export function InputPanel() {
 
         if (!response) {
             return;
+        } else {
+            setSseReady(true);
         }
 
-        const eventSource = new EventSource(`${apiBaseUrl}/stream-message/${chatId}`);
-    
-        eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            setSseData(data);
-        };
-
-        eventSource.onerror = () => {
-            eventSource.close();
-        };
-
-        return () => {
-            eventSource.close();
-        }
+        form.reset();
     }
 
     return (

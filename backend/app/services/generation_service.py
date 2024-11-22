@@ -1,3 +1,4 @@
+import asyncio
 from openai import AzureOpenAI, OpenAI
 from typing import Dict, Optional
 from dotenv import load_dotenv
@@ -8,18 +9,31 @@ from .evaluation_service import compare_outputs, compute_output_similarity_score
 
 # Configure logging for generation service
 generation_logger = logging.getLogger('generation_logger')
-generation_logger.setLevel(logging.ERROR)
+generation_logger.setLevel(logging.INFO)
+
+# File handler for error logs
 generation_handler = logging.FileHandler('message_generation_errors.log')
 generation_handler.setLevel(logging.ERROR)
 generation_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 generation_handler.setFormatter(generation_formatter)
+
+# Console handler for info and above logs
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(console_formatter)
+
+# Add handlers to the logger
 generation_logger.addHandler(generation_handler)
+generation_logger.addHandler(console_handler)
 
 
 load_dotenv()
 RETRIALS = int(os.getenv("RETRIALS") or '5')
 
 def parse_code(code: str) -> str:
+    if code.startswith("```"):
+        code = code.strip("```")
     replacements = ["python\n", "Python\n"]
     code = code.replace("markdown\n", "")
 
@@ -54,17 +68,18 @@ async def generate_code_api(
         "\nAlso, include all the needed imports."
 
     for _ in range(RETRIALS):
-        response = client.chat.completions.create(
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
             model=model,
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a programming assistant, skilled in writing complex programming concepts with creative syntax."
+                    "content": "You are a programming assistant, skilled in writing complex programming concepts with creative syntax.",
                 },
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
             temperature=temperature,
-            n=n
+            n=n,
         )
         response_dict = json.loads(response.to_json())
         return response_dict
@@ -87,10 +102,14 @@ async def generate_test_cases_api(
     Return only the function calls with each of the test cases, each in a separate line, without any other text."""
 
     for _ in range(RETRIALS):
-        response = client.chat.completions.create(
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
             model=model,
             messages=[
-                {"role": "system", "content": "You are a helpful Python programming assistant. Your objective is to create test inputs for the given problem."},
+                {
+                    "role": "system", 
+                    "content": "You are a helpful Python programming assistant. Your objective is to create test inputs for the given problem."
+                },
                 {"role": "user", "content": prompt},
             ]
         )
@@ -125,12 +144,9 @@ async def generate_message_data(
             "data": base_code
         }
         base_code_text = json.dumps(base_code_response, indent=4)
+        generation_logger.info(f"Base code generated: {base_code_text}")
         yield f"{base_code_text}\n\n"        
-    except Exception as e:
-        logging.error(f"Error generating base response: {e}")
-        raise
-
-    try:
+ 
         sample_responses = await generate_code_api(prompt=prompt, n=5,client=client)
         if not sample_responses:
             raise Exception("Failed to generate sample responses")
@@ -142,13 +158,11 @@ async def generate_message_data(
             "message_type": "sample_codes",
             "data": sample_codes
         }
+        generation_logger.info(f"Sample codes generated: {sample_codes_response}")
         sample_codes_text = json.dumps(sample_codes_response, indent=4)
         yield f"{sample_codes_text}\n\n"
-    except Exception as e:
-        logging.error(f"Error generating sample responses: {e}")
-        raise
+ 
 
-    try:
         test_cases = await generate_test_cases_api(prompt=prompt, entry_point=entry_point, client=client)
         if not test_cases:
             raise Exception("Failed to generate test cases")
@@ -157,12 +171,9 @@ async def generate_message_data(
             "data": test_cases
         }
         test_cases_text = json.dumps(test_cases_response, indent=4)
+        generation_logger.info(f"Test cases generated: {test_cases_text}")
         yield f"{test_cases_text}\n\n"
-    except Exception as e:
-        logging.error(f"Error generating test cases: {e}")
-        raise
 
-    try:
         all_codes = [base_code] + sample_codes
         entry_points = extract_entry_points(all_codes)
         base_entry_point = entry_points[0]
@@ -175,6 +186,7 @@ async def generate_message_data(
             "data": base_output
         }
         base_output_text = json.dumps(base_output_response, indent=4)
+        generation_logger.info(f"Base output generated: {base_output_text}")
         yield f"{base_output_text}\n\n"
 
         sample_outputs = execution_results["sample_code_results"]
@@ -183,30 +195,25 @@ async def generate_message_data(
             "data": sample_outputs
         }
         sample_outputs_text = json.dumps(sample_outputs_response, indent=4)
+        generation_logger.info(f"Sample outputs generated: {sample_outputs_text}")
         yield f"{sample_outputs_text}\n\n"
-    except Exception as e:
-        logging.error(f"Error executing codes: {e}")
-        raise
 
-    try:
         comparison_results = compare_outputs(execution_results["base_code_results"], execution_results["sample_code_results"])
         comparison_results_response = {
             "message_type": "comparison_results",
             "data": comparison_results
         }
         comparison_results_text = json.dumps(comparison_results_response, indent=4)
+        generation_logger.info(f"Comparison results generated: {comparison_results_text}")
         yield f"{comparison_results_text}\n\n"
-    except Exception as e:
-        logging.error(f"Error comparing outputs: {e}")
-        raise
 
-    try:
         score = compute_output_similarity_score(comparison_results)
         score_response = {
             "message_type": "score",
             "data": score
         }
         score_text = json.dumps(score_response, indent=4)
+        generation_logger.info(f"Score generated: {score_text}")
         yield f"{score_text}\n\n"
 
     except Exception as e:

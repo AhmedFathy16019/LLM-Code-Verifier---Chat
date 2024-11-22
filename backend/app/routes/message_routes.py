@@ -171,4 +171,5 @@ async def stream_generate_message(request: Request, chat_id: str):
         except Exception as e:
             yield {"event": "error", "data": str(e)}
 
+    redis_client.delete(chat_id)
     return EventSourceResponse(event_generator())
