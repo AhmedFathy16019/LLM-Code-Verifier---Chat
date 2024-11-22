@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -15,10 +15,10 @@ import {
     FormLabel,
 } from '@/components/ui/form'
 import {
-    Popover,
-    PopoverTrigger,
-    PopoverContent,
-} from '@/components/ui/popover'
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger
+} from '@/components/ui/collapsible'
 import {
     Card,
     CardContent
@@ -49,6 +49,7 @@ export function InputPanel() {
         defaultValues: formDefaultValues
     });
     const { errors } = form.formState;
+    const [isOpen, setIsOpen] = useState(true);
 
     useEffect(() => {
         if (Object.keys(errors).length > 0) {
@@ -83,30 +84,40 @@ export function InputPanel() {
 
     return (
         <Card className="w-11/12">
-            <CardContent className="flex items-center p-2">
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(submit)} className="flex flex-row space-x-2 w-full">
-                        <FormField 
-                            control={form.control}
-                            name="prompt"
-                            render={({ field }) => (
-                                <FormItem className="w-auto flex-grow">
-                                    <FormControl>
-                                        <Input {...field} placeholder="Enter your prompt" className="border-none shadow-none"/>
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
+            <CardContent className="p-2">
+                <Collapsible
+                    open={isOpen}
+                    onOpenChange={setIsOpen}
+                >
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(submit)} className="flex flex-col space-y-2 w-full">
+                            <div className="flex space-x-2 w-full">
+                                <FormField 
+                                    control={form.control}
+                                    name="prompt"
+                                    render={({ field }) => (
+                                        <FormItem className="w-auto flex-grow">
+                                            <FormControl>
+                                                <Input {...field} placeholder="Enter your prompt" className="border-none shadow-none"/>
+                                            </FormControl>
+                                        </FormItem>
+                                    )}
+                                />
 
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant='outline'>
-                                    <GearIcon/>
-                                    Edit Parameters
+                                <CollapsibleTrigger asChild>
+                                    <Button variant='outline'>
+                                        <GearIcon/>
+                                        Toggle Parameters
+                                    </Button>
+                                </CollapsibleTrigger>
+                                
+                                <Button type="submit" className="!mr-2">
+                                    <PaperPlaneIcon/>
                                 </Button>
-                            </PopoverTrigger>
+                            </div>
+                            
 
-                            <PopoverContent className="flex flex-col space-y-2">
+                            <CollapsibleContent className={`flex flex-wrap gap-4 w-full p-2 ${!isOpen ? 'hidden' : ''}`}>
                                 <FormField 
                                     control={form.control}
                                     name="entryPoint"
@@ -209,14 +220,10 @@ export function InputPanel() {
                                         </FormItem>
                                     )}
                                 />
-                            </PopoverContent>                       
-                        </Popover>
-
-                        <Button type="submit" className="!mr-2">
-                            <PaperPlaneIcon/>
-                        </Button>
-                    </form>
-                </Form>
+                            </CollapsibleContent>
+                        </form>
+                    </Form>
+                </Collapsible>
             </CardContent>
         </Card>
     )

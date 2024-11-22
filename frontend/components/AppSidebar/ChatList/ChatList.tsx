@@ -3,6 +3,7 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
 
 import {
@@ -13,7 +14,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 import { DotsHorizontalIcon, ExclamationTriangleIcon} from "@radix-ui/react-icons";
-import { Skeleton } from "@/components/ui/skeleton";
 
 import { useChatsContext } from "@/contexts/ChatContext";
 
@@ -22,15 +22,13 @@ export function ChatList() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-2 p-2">
-        <Skeleton className="w-full h-8 p-2"/>
-        <Skeleton className="w-full h-8 p-2"/>
-        <Skeleton className="w-full h-8 p-2"/>
-        <Skeleton className="w-full h-8 p-2"/>
-        <Skeleton className="w-full h-8 p-2"/>
-        <Skeleton className="w-full h-8 p-2"/>
-        <Skeleton className="w-full h-8 p-2"/>
-      </div>
+      <SidebarMenu>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <SidebarMenuItem key={index}>
+            <SidebarMenuSkeleton />
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
     );
   }
 
