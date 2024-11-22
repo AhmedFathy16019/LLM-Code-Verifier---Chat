@@ -11,6 +11,7 @@ class Message(Model):
     test_cases: List[str]
     base_output: List
     sample_outputs: dict
+    comparison_results: dict
     score: float
     is_deleted: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -26,6 +27,7 @@ class Message(Model):
 class Chat(Model):
     title: str
     messages: List[ObjectId]
+    user_id: ObjectId
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     is_deleted: bool = False

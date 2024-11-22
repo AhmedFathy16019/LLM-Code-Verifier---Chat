@@ -160,6 +160,7 @@ async def stream_generate_message(request: Request, chat_id: str):
                 test_cases=message_data["test_cases"],
                 base_output=message_data["base_output"],
                 sample_outputs=message_data["sample_outputs"],
+                comparison_results=message_data["comparison_results"],
                 score=message_data["score"]
             )
             await engine.save(new_message)

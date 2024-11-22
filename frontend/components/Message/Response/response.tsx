@@ -43,7 +43,6 @@ export function Response() {
     const { sseReady } = useMessageContext();
 
     const handleSseData = (sseData: any) => {
-        console.log('sseData :>> ', sseData);
         switch(sseData.message_type) {
             case 'base_code':
                 setBaseCode(sseData.data as string);

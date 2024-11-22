@@ -1,3 +1,4 @@
+from typing import Dict, List
 from fastapi import APIRouter, HTTPException, Request
 from odmantic import ObjectId
 from ..models import Chat, Message, User
@@ -41,6 +42,36 @@ async def create_chat(request: Request, chat: CreateChatRequest):
         created_at=new_chat.created_at,
         updated_at=new_chat.updated_at
     )
+
+@router.get("/chats/get-user-chats", response_model=List[Dict[str, str]])
+async def get_user_chats(request: Request):
+    token = request.headers.get("Authorization")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+    
+    token = token[7:]
+    token = await authorize_token(token)
+
+    user = await engine.find_one(User, User.id == ObjectId(token.user_id))
+    if not user:
+        print("User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+
+    print(f"User ID: {ObjectId(user.id)}")
+
+    # Find all chats with user_id equal to user.id and project only _id and title fields
+    chats = await engine.find(
+        Chat,
+        Chat.user_id == ObjectId(user.id)
+    )
+
+    return [
+        {
+            "_id": str(chat.id),
+            "title": chat.title
+        }
+        for chat in chats
+    ]
 
 @router.get("/chats/{chat_id}", response_model=GetChatResponse)
 async def get_chat(chat_id: str):
