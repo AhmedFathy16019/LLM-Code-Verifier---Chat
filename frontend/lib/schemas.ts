@@ -10,6 +10,21 @@ const inputSchema = z.object({
     ignoreStringCase: z.optional(z.boolean()),
 })
 
+const registerSchema = z.object({
+    username: z.string(),
+    password: z.string(),
+    apiKey: z.string(),
+});
+
+const loginSchema = z.object({
+    username: z.string(),
+    password: z.string(),
+});
+
+export type RegisterSchema = z.infer<typeof registerSchema>;
+
 export type InputSchema = z.infer<typeof inputSchema>;
 
-export default inputSchema;
+export type LoginSchema = z.infer<typeof loginSchema>;
+
+export { registerSchema, inputSchema, loginSchema };

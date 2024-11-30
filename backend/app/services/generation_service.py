@@ -144,7 +144,6 @@ async def generate_message_data(
             "data": base_code
         }
         base_code_text = json.dumps(base_code_response, indent=4)
-        generation_logger.info(f"Base code generated: {base_code_text}")
         yield f"{base_code_text}\n\n"        
  
         sample_responses = await generate_code_api(prompt=prompt, n=5,client=client)
@@ -158,7 +157,6 @@ async def generate_message_data(
             "message_type": "sample_codes",
             "data": sample_codes
         }
-        generation_logger.info(f"Sample codes generated: {sample_codes_response}")
         sample_codes_text = json.dumps(sample_codes_response, indent=4)
         yield f"{sample_codes_text}\n\n"
  
@@ -171,7 +169,6 @@ async def generate_message_data(
             "data": test_cases
         }
         test_cases_text = json.dumps(test_cases_response, indent=4)
-        generation_logger.info(f"Test cases generated: {test_cases_text}")
         yield f"{test_cases_text}\n\n"
 
         all_codes = [base_code] + sample_codes
@@ -186,7 +183,6 @@ async def generate_message_data(
             "data": base_output
         }
         base_output_text = json.dumps(base_output_response, indent=4)
-        generation_logger.info(f"Base output generated: {base_output_text}")
         yield f"{base_output_text}\n\n"
 
         sample_outputs = execution_results["sample_code_results"]
@@ -195,7 +191,6 @@ async def generate_message_data(
             "data": sample_outputs
         }
         sample_outputs_text = json.dumps(sample_outputs_response, indent=4)
-        generation_logger.info(f"Sample outputs generated: {sample_outputs_text}")
         yield f"{sample_outputs_text}\n\n"
 
         comparison_results = compare_outputs(execution_results["base_code_results"], execution_results["sample_code_results"])
@@ -204,7 +199,6 @@ async def generate_message_data(
             "data": comparison_results
         }
         comparison_results_text = json.dumps(comparison_results_response, indent=4)
-        generation_logger.info(f"Comparison results generated: {comparison_results_text}")
         yield f"{comparison_results_text}\n\n"
 
         score = compute_output_similarity_score(comparison_results)
@@ -213,7 +207,6 @@ async def generate_message_data(
             "data": score
         }
         score_text = json.dumps(score_response, indent=4)
-        generation_logger.info(f"Score generated: {score_text}")
         yield f"{score_text}\n\n"
 
     except Exception as e:

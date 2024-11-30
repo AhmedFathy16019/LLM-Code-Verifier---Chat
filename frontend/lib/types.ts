@@ -42,3 +42,14 @@ export type ExceptionMessage = {
     exception_type: string;
     exception_message: string;
 }
+
+export type RegisterRequestData = {
+    username: string;
+    password: string;
+    apiKey: string;
+}
+
+export type LoginRequestData = {
+    username: string;
+    password: string;
+}

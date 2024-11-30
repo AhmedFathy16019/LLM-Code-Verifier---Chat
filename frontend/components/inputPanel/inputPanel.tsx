@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -28,9 +28,9 @@ import {
     GearIcon,
 } from "@radix-ui/react-icons";
 
-import inputSchema, { InputSchema } from "../../lib/inputSchema";
+import { InputSchema, inputSchema } from "../../lib/schemas";
 import { useMessageContext } from "@/contexts/messageContext";
-import { generateMessage } from "@/lib/actions/messagesActions";
+import { generateMessage } from "@/lib/actions/MessagesActions";
 import { MessageRequestData } from "@/lib/types";
 
 const formDefaultValues: InputSchema = {
@@ -44,20 +44,12 @@ const formDefaultValues: InputSchema = {
 };
 
 export function InputPanel() {
+    const [isOpen, setIsOpen] = useState(true);
+    const { setRequestData, setSseReady } = useMessageContext();
     const form = useForm<InputSchema>({
         resolver: zodResolver(inputSchema),
         defaultValues: formDefaultValues
     });
-    const { errors } = form.formState;
-    const [isOpen, setIsOpen] = useState(true);
-
-    useEffect(() => {
-        if (Object.keys(errors).length > 0) {
-            console.log("Validation errors:", errors);
-        }
-    }, [errors]);
-
-    const { setRequestData, setSseReady } = useMessageContext();
 
     const submit = async (data: InputSchema) => {
         const requestData: MessageRequestData = {

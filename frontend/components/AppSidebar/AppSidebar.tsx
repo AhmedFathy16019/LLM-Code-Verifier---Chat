@@ -9,6 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 
 import {
@@ -21,6 +22,7 @@ import {
 import { PlusIcon } from "@radix-ui/react-icons"
 import { ChatList } from "./ChatList/ChatList"
 import { ChatsProvider } from "@/contexts/ChatContext"
+import { UserComponent } from "./User/User"
 
 export function AppSidebar() {
   return (
@@ -54,6 +56,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <UserComponent />
+      </SidebarFooter>
     </Sidebar>
   )
 }

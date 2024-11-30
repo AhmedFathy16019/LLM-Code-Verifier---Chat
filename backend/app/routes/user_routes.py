@@ -5,6 +5,7 @@ from ..schemas.user_schema import (
     UpdateUserRequest, UpdateUserResponse,
     GetUserResponse, DeleteUserResponse,
     LoginUserRequest, LoginUserResponse,
+    RegisterUserRequest, RegisterUserResponse
 )
 
 from ..database import engine
@@ -18,7 +19,6 @@ router = APIRouter()
 async def create_user(user: CreateUserRequest):
     new_user = User(
         username=user.username,
-        email=user.email,
         password=user.password,  # Ensure this is hashed
         api_key=user.api_key,  # Ensure this is hashed
         chats=[]
@@ -27,7 +27,6 @@ async def create_user(user: CreateUserRequest):
     return CreateUserResponse(
         user_id=str(new_user.id),
         username=new_user.username,
-        email=new_user.email
     )
 
 @router.get("/users/{user_id}", response_model=GetUserResponse)
@@ -39,7 +38,6 @@ async def get_user(user_id: str):
     return GetUserResponse(
         user_id=str(user.id),
         username=user.username,
-        email=user.email,
         chats=user.chats,
         created_at=user.created_at,
         updated_at=user.updated_at
@@ -52,8 +50,6 @@ async def update_user(user_id: str, user_update: UpdateUserRequest):
         raise HTTPException(status_code=404, detail="User not found")
     if user_update.username:
         user.username = user_update.username
-    if user_update.email:
-        user.email = user_update.email
     if user_update.password:
         user.password = user_update.password  # Ensure this is hashed
     if user_update.api_key:
@@ -62,7 +58,6 @@ async def update_user(user_id: str, user_update: UpdateUserRequest):
     return UpdateUserResponse(
         user_id=str(user.id),
         username=user.username,
-        email=user.email
     )
 
 @router.delete("/users/{user_id}", response_model=DeleteUserResponse)
@@ -77,15 +72,15 @@ async def delete_user(user_id: str):
     return DeleteUserResponse(
         user_id=str(user.id),
         username=user.username,
-        email=user.email,
         created_at=user.created_at,
         updated_at=user.updated_at
     )
 
 # User Signup
-@router.post("/users/signup", response_model=CreateUserResponse)
-async def signup_user(user: CreateUserRequest):
-    existing_user = await engine.find_one(User, User.email == user.email)
+@router.post("/users/signup", response_model=RegisterUserResponse)
+async def signup_user(user: RegisterUserRequest):
+    print(user)
+    existing_user = await engine.find_one(User, User.username == user.username)
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -96,24 +91,29 @@ async def signup_user(user: CreateUserRequest):
     encrypted_api_key = encrypt_api_key(user.api_key)
     new_user = User(
         username=user.username,
-        email=user.email,
         password=hashed_password,
         api_key=encrypted_api_key,
         chats=[],
         is_deactivated=False
     )
     await engine.save(new_user)
+    
+    token = create_access_token(data={
+        "user_id": str(new_user.id),
+        "username": new_user.username,
+        "api_key": new_user.api_key
+    })
 
-    return CreateUserResponse(
+    return RegisterUserResponse(
         user_id=str(new_user.id),
         username=new_user.username,
-        email=new_user.email
+        token=token
     )
 
 # User Login
 @router.post("/users/login", response_model=LoginUserResponse)
 async def login_user(user: LoginUserRequest):
-    db_user = await engine.find_one(User, User.email == user.email)
+    db_user = await engine.find_one(User, User.username == user.username)
     if not db_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -136,6 +136,5 @@ async def login_user(user: LoginUserRequest):
     return LoginUserResponse(
         user_id=str(db_user.id),
         username=db_user.username,
-        email=db_user.email,
         token=token
     )

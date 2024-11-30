@@ -1,5 +1,5 @@
 from odmantic import Model, Field, ObjectId
-from pydantic import EmailStr, field_validator, BaseModel
+from pydantic import field_validator, BaseModel
 from typing import List
 from datetime import datetime
 
@@ -41,7 +41,6 @@ class Chat(Model):
 
 class User(Model):
     username: str
-    email: EmailStr
     password: str
     api_key: str
     chats: List[ObjectId]

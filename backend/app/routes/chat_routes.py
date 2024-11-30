@@ -54,10 +54,7 @@ async def get_user_chats(request: Request):
 
     user = await engine.find_one(User, User.id == ObjectId(token.user_id))
     if not user:
-        print("User not found")
         raise HTTPException(status_code=404, detail="User not found")
-
-    print(f"User ID: {ObjectId(user.id)}")
 
     # Find all chats with user_id equal to user.id and project only _id and title fields
     chats = await engine.find(
