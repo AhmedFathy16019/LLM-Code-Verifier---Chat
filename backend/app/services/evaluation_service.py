@@ -25,7 +25,7 @@ def compare_outputs(
         if base_exception or sample_exception:
             comparison_result['state'] = "exception"
             comparison_result['diff'] = "Exception occurred during execution."
-            comparison_result['score'] = -1
+            comparison_result['score'] = 0
         else:
             base_code_dict = {
                 "type": "output",
@@ -50,8 +50,8 @@ def compare_outputs(
             except Exception as e:
                 logger.error(f"Error comparing outputs: {e}\nbase_output:{base_code_output}\nsample_output:{sample_code_output}")
                 comparison_result['state'] = "different"
-                comparison_result['diff'] = f"Error comparing outputs: {e}\nbase_output:{base_code_output}\nsample_output:{sample_code_output}"
-                comparison_result['score'] = -1
+                comparison_result['diff'] = f"base_output:{base_code_output}\nsample_output:{sample_code_output}"
+                comparison_result['score'] = 0
     
         return comparison_result
     
