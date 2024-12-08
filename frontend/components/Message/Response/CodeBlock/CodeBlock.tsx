@@ -12,7 +12,7 @@ function CodeBlock({ code, showLines = true }: { code: string, showLines?: boole
       language="python"
       style={oneLight}
       showLineNumbers={showLines}
-      className="transparent-code-block"
+      className="transparent-code-block w-full max-h-80 overflow-auto"
     >
       {code}
     </SyntaxHighlighter>

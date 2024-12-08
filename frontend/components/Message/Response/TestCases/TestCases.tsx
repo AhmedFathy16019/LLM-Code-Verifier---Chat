@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/table";
 import CodeBlock from "../CodeBlock/CodeBlock";
 
-function TestCases({ testCases }: { testCases: string[] }) {
-  if (!testCases) {
-    return <Skeleton className="w-full max-w-xs" />;
+function TestCases({ testCases, loading }: { testCases: string[], loading: boolean }) {
+  if (loading) {
+    return <Skeleton className="w-10/12"/>;
   } else {
     return (
-      <Card className="max-w-xl">
+      <Card className="w-full max-h-[75vh] overflow-auto">
         <CardContent>
             <Table>
                 <TableBody>

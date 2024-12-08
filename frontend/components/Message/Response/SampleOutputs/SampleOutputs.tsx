@@ -19,9 +19,9 @@ import {
   CarouselNext
 } from "@/components/ui/carousel";
 
-function SampleOutputs({ sampleOutputs }: { sampleOutputs: { [key: string]: string[]; }; }) {
-  if (Object.keys(sampleOutputs).length === 0) {
-    return <Skeleton className="w-full max-w-xs" />;
+function SampleOutputs({ sampleOutputs, loading }: { sampleOutputs: { [key: string]: string[]; }, loading: boolean }) {
+  if (loading) {
+    return <Skeleton className="w-10/12"/>;
   } else {
     return (
       <Carousel className="max-w-2xl flex items-center">

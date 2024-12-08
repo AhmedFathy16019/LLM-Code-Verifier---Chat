@@ -5,11 +5,15 @@ import { MessageProvider } from "@/contexts/messageContext";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="flex flex-col items-center justify-center min-h-screen font-[family-name:var(--font-geist-sans)]">
       <MessageProvider>
-        <Request/>
-        <Response/>
-        <InputPanel/>
+      <div className="flex-1 overflow-y-auto max-h-[60vh] p-4">
+          <Request />
+          <Response />
+        </div>
+        <div className="flex-2 m-4 max-h-[25vh] w-5/6 items-center justify-center">
+          <InputPanel />
+        </div>
       </MessageProvider>
     </div>
   );

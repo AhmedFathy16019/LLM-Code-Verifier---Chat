@@ -12,9 +12,9 @@ import {
   TableCell
 } from "@/components/ui/table";
 
-function BaseOutput({ baseOutput }: { baseOutput: unknown[] }) {
-  if (!baseOutput) {
-    return <Skeleton className="w-full max-w-xs" />;
+function BaseOutput({ baseOutput, loading }: { baseOutput: unknown[], loading: boolean }) {
+  if (loading) {
+    return <Skeleton className="w-10/12"/>;
   } else {
     return (
       <Card>

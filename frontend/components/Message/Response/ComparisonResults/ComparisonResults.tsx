@@ -11,19 +11,20 @@ interface ComparisonResultsProps {
             score: number;
         }[];
     };
+    loading: boolean;
 }
 
-function ComparisonResults({ comparisonResults }: ComparisonResultsProps) {
-    if (Object.keys(comparisonResults).length === 0) {
-        return <Skeleton className="w-full max-w-xs" />;
+function ComparisonResults({ comparisonResults, loading }: ComparisonResultsProps) {
+    if (loading) {
+        return <Skeleton className="w-10/12"/>;
     } else {
         return (
-            <Carousel className="max-w-2xl flex items-center">
+            <Carousel className="max-w-xl flex items-center">
                 <CarouselPrevious className="mr-4" />
                 <CarouselContent className="flex-grow">
                     {Object.entries(comparisonResults).map(([, sampleData], index) => (
                         <CarouselItem key={index} className="flex justify-center">
-                            <Card className="w-10/12">
+                            <Card className="w-10/12 max-h-[65vh] overflow-auto">
                                 <CardHeader className="flex">
                                     <CardTitle>Sample Code {index + 1}</CardTitle>
                                 </CardHeader>

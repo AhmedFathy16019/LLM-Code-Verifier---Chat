@@ -75,14 +75,14 @@ export function InputPanel() {
     }
 
     return (
-        <Card className="w-11/12">
+        <Card className="w-full mb-6">
             <CardContent className="p-2">
                 <Collapsible
                     open={isOpen}
                     onOpenChange={setIsOpen}
                 >
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(submit)} className="flex flex-col space-y-2 w-full">
+                        <form onSubmit={form.handleSubmit(submit)} className="flex flex-col space-y-2">
                             <div className="flex space-x-2 w-full">
                                 <FormField 
                                     control={form.control}
